@@ -1,13 +1,27 @@
 package Banking;
-
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-
+import java.io.IOException;
+import java.io.IOException;
 public class DatabaseConnection {
+	public static String getPassword() {
+		try {
+			String password = Files.readString(Paths.get("Password.txt")).trim(); 
+			return password;
+			
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+			return null;
+		}		
+	}
 	private static final String url="jdbc:mysql://localhost:3306/userdb";
 	private static final String Name ="root";
-	private static final String Password ="Srithar@2004";
+	private static final String Password = getPassword();
 	
 	private static Connection connection =null;
 	

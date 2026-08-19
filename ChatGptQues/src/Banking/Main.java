@@ -42,6 +42,7 @@ public class Main {
 					System.out.println("Enter the Account Type: ");
 					String AccountType=s.nextLine().toLowerCase();
 					
+					bankaccount.CreateAccount(AccountNumber,AccountHolderName,AccountType);
 					query = "Insert into Banking values(?,?,?,?)";
 					PreparedStatement ps = con.prepareStatement(query);
 					
@@ -51,7 +52,6 @@ public class Main {
 					ps.setLong(4,0);
 					
 					ps.executeUpdate();
-					bankaccount.CreateAccount(AccountNumber,AccountHolderName,AccountType);
 					break;
 				
 				case 2:

@@ -10,7 +10,7 @@ public class BankServer extends NanoHTTPD {
     private Bank bank = new Bank();
 
     public BankServer() throws Exception {
-        super(8083); // ✅ Changed port to 8081 (you already did)
+        super(8083); 
         start(SOCKET_READ_TIMEOUT, false);
         System.out.println("✅ Connected to MySQL Database");
         System.out.println("✅ Server started at http://localhost:8083");
