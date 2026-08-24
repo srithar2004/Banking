@@ -49,40 +49,126 @@ public class Bank {
 		return "Account not Found!";
 	}
 	
-	public String TransferAmount(long Ac,long Accrec,long amount) throws SQLException {
-		String selectquery = "select balance from Banking where AccountNumber =?";
-		PreparedStatement ps = con.prepareStatement(selectquery) ;
-		
-		ps.setLong(1,Ac);
-		ResultSet rs = ps.executeQuery();
-		
-		if(!rs.next()) {
-			return "Account Not Found!";
-		}
-		
-		
-		int currentbalance = rs.getInt("balance");
-		
-		if(currentbalance<amount) {
-			return "Insufficient Balance!";
-		}
-		
-		String Updatequery = "Update Banking set balance=balance-? where AccountNumber = ?";
-		PreparedStatement ps1 = con.prepareStatement(Updatequery);
-		
-		ps1.setLong(1,amount);
-		ps1.setLong(2, Ac);
-		ps1.executeUpdate();
-		
-		String TransferQuery = "update Banking set balance=balance+? where AccountNumber=?";
-		PreparedStatement ps2= con.prepareStatement(TransferQuery);
-		
-		ps2.setLong(1, amount);
-		ps2.setLong(2,Accrec);
-		ps2.executeUpdate();
-		return "Amount Transfered Successfully!";
-		
-		
+	public String TransferAmount(long Ac, long Accrec, long amount) throws SQLException {
+
+	    // Basic validation
+	    if (amount <= 0) {
+	        return "Invalid Transfer Amount!";
+	    }
+
+	    // Prevent transferring to the same account
+	    if (Ac == Accrec) {
+	        return "Sender and Receiver Account Cannot Be Same!";
+	    }
+
+	    // Set transaction isolation level
+	    con.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+
+	    // Start transaction
+	    con.setAutoCommit(false);
+
+	    try {
+
+	        // Check sender account and get balance
+	        String selectQuery =
+	                "SELECT balance FROM Banking WHERE AccountNumber = ?";
+
+	        PreparedStatement ps = con.prepareStatement(selectQuery);
+	        ps.setLong(1, Ac);
+
+	        ResultSet rs = ps.executeQuery();
+
+	        if (!rs.next()) {
+	            con.rollback();
+	            con.setAutoCommit(true);
+	            return "Sender Account Not Found!";
+	        }
+
+	        int currentBalance = rs.getInt("balance");
+
+	        // Check sufficient balance
+	        if (currentBalance < amount) {
+	            con.rollback();
+	            con.setAutoCommit(true);
+	            return "Insufficient Balance!";
+	        }
+
+	        // Check receiver account exists
+	        String receiverQuery =
+	                "SELECT AccountNumber FROM Banking WHERE AccountNumber = ?";
+
+	        PreparedStatement receiverPs =
+	                con.prepareStatement(receiverQuery);
+
+	        receiverPs.setLong(1, Accrec);
+
+	        ResultSet receiverRs = receiverPs.executeQuery();
+
+	        if (!receiverRs.next()) {
+	            con.rollback();
+	            con.setAutoCommit(true);
+	            return "Receiver Account Not Found!";
+	        }
+
+	        // Debit sender
+	        String debitQuery =
+	                "UPDATE Banking SET balance = balance - ? " +
+	                "WHERE AccountNumber = ?";
+
+	        PreparedStatement debitPs =
+	                con.prepareStatement(debitQuery);
+
+	        debitPs.setLong(1, amount);
+	        debitPs.setLong(2, Ac);
+
+	        int debitResult = debitPs.executeUpdate();
+
+	        if (debitResult != 1) {
+	            con.rollback();
+	            con.setAutoCommit(true);
+	            return "Debit Failed!";
+	        }
+
+	        // Credit receiver
+	        String creditQuery =
+	                "UPDATE Banking SET balance = balance + ? " +
+	                "WHERE AccountNumber = ?";
+
+	        PreparedStatement creditPs =
+	                con.prepareStatement(creditQuery);
+
+	        creditPs.setLong(1, amount);
+	        creditPs.setLong(2, Accrec);
+
+	        int creditResult = creditPs.executeUpdate();
+
+	        if (creditResult != 1) {
+	            con.rollback();
+	            con.setAutoCommit(true);
+	            return "Credit Failed! Transaction Rolled Back!";
+	        }
+
+	        // Both operations successful
+	        con.commit();
+
+	        // Restore default JDBC behavior
+	        con.setAutoCommit(true);
+
+	        return "Amount Transferred Successfully!";
+
+	    } catch (SQLException e) {
+
+	        // Something went wrong
+	        con.rollback();
+
+	        con.setAutoCommit(true);
+
+	        System.out.println("Transaction Failed. Rolled Back.");
+
+	        e.printStackTrace();
+
+	        return "Transfer Failed! Transaction Rolled Back!";
+	    }
 	}
 	
 	
