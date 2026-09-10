@@ -1,6 +1,7 @@
 package Banking;
 
 import fi.iki.elonen.NanoHTTPD;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +11,7 @@ public class BankServer extends NanoHTTPD {
     private Bank bank = new Bank();
 
     public BankServer() throws Exception {
-        super(8083); // ✅ Changed port to 8081 (you already did)
+        super(8083);
         start(SOCKET_READ_TIMEOUT, false);
         System.out.println("✅ Connected to MySQL Database");
         System.out.println("✅ Server started at http://localhost:8083");
@@ -22,33 +23,30 @@ public class BankServer extends NanoHTTPD {
             String uri = session.getUri();
             Method method = session.getMethod();
 
-            // ✅ Step 1: Handle preflight (CORS) request from browser
             if (Method.OPTIONS.equals(method)) {
                 Response response = newFixedLengthResponse("");
                 addCORSHeaders(response);
                 return response;
             }
 
-            // ✅ Step 2: Parse request body safely
             Map<String, String> body = new HashMap<>();
             session.parseBody(body);
             Map<String, String> params = session.getParms();
 
             Response response;
 
-            // ✅ Step 3: Handle routes
             if (Method.POST.equals(method)) {
                 switch (uri) {
                     case "/deposit": {
                         long accno = Long.parseLong(params.get("accno"));
-                        long amount = Long.parseLong(params.get("amount"));
+                        BigDecimal amount = new BigDecimal(params.get("amount"));
                         response = newFixedLengthResponse(bankAccount.deposit(accno, amount));
                         break;
                     }
 
                     case "/withdraw": {
                         long acc = Long.parseLong(params.get("accno"));
-                        long take = Long.parseLong(params.get("amount"));
+                        BigDecimal take = new BigDecimal(params.get("amount"));
                         response = newFixedLengthResponse(bankAccount.withdraw(acc, take));
                         break;
                     }
@@ -56,7 +54,7 @@ public class BankServer extends NanoHTTPD {
                     case "/transfer": {
                         long from = Long.parseLong(params.get("from"));
                         long to = Long.parseLong(params.get("to"));
-                        long amt = Long.parseLong(params.get("amount"));
+                        BigDecimal amt = new BigDecimal(params.get("amount"));
                         response = newFixedLengthResponse(bank.TransferAmount(from, to, amt));
                         break;
                     }
@@ -76,10 +74,13 @@ public class BankServer extends NanoHTTPD {
                 response = newFixedLengthResponse("Welcome to Banking API!");
             }
 
-            // ✅ Step 4: Add CORS headers to all responses
             addCORSHeaders(response);
             return response;
 
+        } catch (NumberFormatException e) {
+            Response response = newFixedLengthResponse("Invalid number format: " + e.getMessage());
+            addCORSHeaders(response);
+            return response;
         } catch (Exception e) {
             e.printStackTrace();
             Response response = newFixedLengthResponse("Error: " + e.getMessage());
@@ -88,7 +89,6 @@ public class BankServer extends NanoHTTPD {
         }
     }
 
-    // ✅ Step 5: Helper method to allow frontend access
     private void addCORSHeaders(Response response) {
         response.addHeader("Access-Control-Allow-Origin", "*");
         response.addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
