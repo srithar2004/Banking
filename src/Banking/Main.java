@@ -7,7 +7,6 @@ import java.sql.SQLException;
 
 import java.util.*;
 
-
 public class Main {
 	
 	
@@ -51,7 +50,6 @@ public class Main {
 					ps.executeUpdate();
 					bankaccount.CreateAccount(AccountNumber,AccountHolderName,AccountType);
 					break;
-				
 				case 2:
 					System.out.println("Enter the Account Number: ");
 					long accno = s.nextLong();
@@ -60,9 +58,7 @@ public class Main {
 					long amount=s.nextInt();
 					
 					System.out.println(bankaccount.deposit(accno,amount));
-					
 					break;
-					
 				case 3:
 					System.out.println("Enter the Account Number: ");
 					long accnumber =s.nextLong();
@@ -70,10 +66,7 @@ public class Main {
 					long take = s.nextInt();
 					
 					System.out.println(bankaccount.withdraw(accnumber,take));
-					
-					
 					break;
-					
 				case 4:
 					System.out.println("Enter the Account Number: ");
 					long AccNum=s.nextLong();
@@ -85,23 +78,26 @@ public class Main {
 					long amt=s.nextInt();
 					System.out.println(bank.TransferAmount(AccNum,AccRec,amt));
 					break;
-					
+				case 5:
+					System.out.println("Show all Accounts is not implemented yet.");
+					break;
 				case 6:
 					System.out.println("Enter the Account Number: ");
 					long acc=s.nextLong();
-					
 					bank.SearchAccNo(acc);
-							
 					break;
-				
 				case 8:
 					System.out.println("Enter the Account Number: ");
 					long val =s.nextLong();
 					System.out.println(bank.DisplayAccDetails(val));
 					break;
+				case 9:
+					System.out.println("Exiting the application...");
+					s.close();
+					return;
 				default:
 					System.out.println("Please Enter the Correct Choice!");
-					
+					break;
 			}
 		}
 	}
